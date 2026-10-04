@@ -9,7 +9,7 @@
 - **Gestión de streams (E/S):** con `capture_output=True` o `stdout=PIPE` / `stderr=PIPE` se capturan las salidas del hijo por medio de tuberías (pipes). `communicate()` las lee completas y evita el bloqueo por llenado del búfer (el mismo problema que en Java). Con `text=True` los bytes se convierten a cadenas de texto.
 - **Ciclo de vida y código de salida:** `returncode` devuelve el código de salida del hijo, y si es negativo indica que lo terminó una señal (por ejemplo, `-9` = `SIGKILL`). Además, `timeout=` lanza `TimeoutExpired` si el hijo tarda demasiado, `poll()` consulta si ya terminó sin bloquear, `wait()` lo espera, y `kill()` / `terminate()` envían `SIGKILL` / `SIGTERM`.
 - **Contexto de ejecución:** `env=` define las variables de entorno del hijo y `cwd=` su directorio de trabajo.
-- **Portabilidad:** varias funciones de `os` solo existen en Unix (`fork`, `getuid`, `getppid` en versiones viejas de Windows), así que el programa debe revisar `os.name` o `platform.system()` antes de usarlas.
+- **Portabilidad:** varias funciones de `os` solo existen en Unix (por ejemplo `fork` y `getuid`), así que el programa debe revisar `os.name` o `platform.system()` antes de usarlas.
 
 **Evidencia:** `Python/llamados_sistema.py`. Ejecútalo con `python3 Python/llamados_sistema.py` y toma capturas del código y de la salida.
 
@@ -72,7 +72,7 @@ execve(".../lib/jspawnhelper", ...) = 0
 execve("/usr/bin/ls", ["ls", "-l", "/tmp/taller3_java.txt"], ...) = 0
 wait4(516, [{WIFEXITED(s) && WEXITSTATUS(s) == 0}], 0, NULL) = 516
 ```
-Nota: en Java 21 sobre Linux, `ProcessBuilder` usa `posix_spawn`, que se ve como `clone3` con la bandera `CLONE_VFORK`. Primero ejecuta un programa auxiliar de la JVM (`jspawnhelper`) y este hace el `execve` final del comando pedido.
+Nota: la línea de `clone3` viene de una segunda ejecución con `strace`, por eso su PID (575) no coincide con el de las demás (516). En Java 21 sobre Linux, `ProcessBuilder` usa `posix_spawn`, que se ve como `clone3` con la bandera `CLONE_VFORK`. Primero ejecuta un programa auxiliar de la JVM (`jspawnhelper`) y este hace el `execve` final del comando pedido.
 
 ---
 
