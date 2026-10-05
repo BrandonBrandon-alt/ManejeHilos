@@ -2,6 +2,8 @@
 
 > Las respuestas de C# (puntos 3 y 4) están en `CSharp/TALLER_CSharp.md`.
 
+> **Si lo ejecutas en Windows:** los programas usan la carpeta temporal del sistema (`%TEMP%` en Windows, `/tmp` en Linux) y en Windows el paso 3 usa `CreateProcess` con `cmd /c dir`, porque Windows no tiene `fork`/`execve`. Corren sin error, pero las llamadas que se ven son las de Windows, no las de Linux. Como el punto 5 pide Linux, para las capturas conviene ejecutarlos en Linux o en WSL (`wsl python3 Python/tres_llamadas_sistema.py`). Las salidas de abajo son de Linux.
+
 ## Punto 4 – Python (características sobre los llamados al sistema)
 
 - **Dos niveles de acceso:** el módulo `os` tiene funciones que corresponden casi 1 a 1 con las syscalls de POSIX (`os.getpid`, `os.fork`, `os.execvp`, `os.waitpid`, `os.kill`, `os.open`, `os.read`, `os.write`). El módulo `subprocess` es una abstracción de alto nivel para crear procesos: en Linux usa internamente fork/vfork + `execve` + `waitpid` y en Windows usa `CreateProcess`.

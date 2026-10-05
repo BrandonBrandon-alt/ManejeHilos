@@ -76,12 +76,13 @@ using (var proceso = Process.Start(info)!)
 // ---------------------------------------------------------------------
 var dormilon = Process.Start(new ProcessStartInfo
 {
-    FileName = esWindows ? "timeout" : "sleep",
-    Arguments = esWindows ? "/t 30" : "30",
+    // En Windows "ping -n 31" tarda unos 30 s (timeout /t falla si la entrada está redirigida)
+    FileName = esWindows ? "ping" : "sleep",
+    Arguments = esWindows ? "-n 31 127.0.0.1" : "30",
     UseShellExecute = false,
     RedirectStandardOutput = true
 })!;
-Console.WriteLine($"Proceso 'sleep' iniciado con PID {dormilon.Id}; ¿terminó? {dormilon.HasExited}");
+Console.WriteLine($"Proceso '{dormilon.ProcessName}' iniciado con PID {dormilon.Id}; ¿terminó? {dormilon.HasExited}");
 dormilon.Kill();
 dormilon.WaitForExit();
 Console.WriteLine($"Tras Kill(): ¿terminó? {dormilon.HasExited}, código: {dormilon.ExitCode}\n");
