@@ -13,19 +13,26 @@ import java.io.File;
  *   2. Identificación      -> ProcessHandle.current().pid()      = getpid()
  *   3. Control de procesos -> ProcessBuilder.start() / waitFor()  = fork/vfork + execve + waitpid
  *
+ * El taller pide Linux; en Windows también corre, pero la JVM usa
+ * CreateFile/WriteFile/ReadFile y CreateProcess en lugar de las syscalls de Linux.
+ *
  * Compilar y ejecutar:  java TresLlamadasSistema.java
  * Verificación:         strace -f -e trace=openat,write,read,getpid,vfork,execve,wait4 java TresLlamadasSistema.java
  */
 public class TresLlamadasSistema {
 
-    private static final String RUTA = "/tmp/taller3_java.txt";
+    // Carpeta temporal del sistema: /tmp en Linux, %TEMP% en Windows
+    private static final String RUTA =
+            new File(System.getProperty("java.io.tmpdir"), "taller3_java.txt").getPath();
+    private static final boolean ES_WINDOWS =
+            System.getProperty("os.name").toLowerCase().startsWith("windows");
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
         // -----------------------------------------------------------------
         // LLAMADA 1: open / write / read / close (sistema de archivos)
         // -----------------------------------------------------------------
-        System.out.println("1) Llamadas de archivos: open, write, read, close");
+        System.out.println("1) Llamadas de archivos: open, write, read, close (" + RUTA + ")");
         try (FileOutputStream salida = new FileOutputStream(RUTA)) {        // syscall openat
             byte[] datos = "Hola desde una syscall write()\n".getBytes();
             salida.write(datos);                                             // syscall write
@@ -51,7 +58,10 @@ public class TresLlamadasSistema {
         // LLAMADA 3: fork / execve / wait (creación y control de procesos)
         // -----------------------------------------------------------------
         System.out.println("3) Llamadas de procesos: fork, execve, wait");
-        ProcessBuilder pb = new ProcessBuilder("ls", "-l", RUTA);
+        // En Windows no existe "ls": se usa "cmd /c dir" (CreateProcess en vez de fork/execve)
+        ProcessBuilder pb = ES_WINDOWS
+                ? new ProcessBuilder("cmd.exe", "/c", "dir", RUTA)
+                : new ProcessBuilder("ls", "-l", RUTA);
         pb.inheritIO();                                  // el hijo escribe en nuestra misma consola
         Process hijo = pb.start();                       // syscalls vfork + execve
         System.out.println("   start()   -> hijo creado con PID " + hijo.pid());

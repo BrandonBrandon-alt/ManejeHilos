@@ -61,14 +61,16 @@ except subprocess.TimeoutExpired:
 # ---------------------------------------------------------------------
 # 4. subprocess.Popen: control manual del ciclo de vida (no bloqueante)
 # ---------------------------------------------------------------------
-dormilon = subprocess.Popen(["timeout", "/t", "30"] if es_windows else ["sleep", "30"],
-                            stdout=subprocess.DEVNULL)
-print(f"Proceso 'sleep' iniciado con PID {dormilon.pid}; ¿terminó? {dormilon.poll() is not None}")
+# Un hijo que duerme 30 s (se usa el mismo intérprete de Python para que
+# funcione igual en Linux y en Windows)
+dormilon = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
+print(f"Proceso hijo (duerme 30 s) iniciado con PID {dormilon.pid}; ¿terminó? {dormilon.poll() is not None}")
 dormilon.kill()                   # kill(pid, SIGKILL) / TerminateProcess
 codigo = dormilon.wait()          # waitpid
 print(f"Tras kill(): ¿terminó? {dormilon.poll() is not None}, código: {codigo}")
-if not es_windows:
-    print(f"(código negativo = terminado por la señal {signal.Signals(-codigo).name})\n")
+if codigo < 0:
+    print(f"(código negativo = terminado por la señal {signal.Signals(-codigo).name})")
+print()
 
 # ---------------------------------------------------------------------
 # 5. Módulo os: llamadas directas a las syscalls POSIX (solo Linux/Unix)
